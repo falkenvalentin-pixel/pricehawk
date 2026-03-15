@@ -1,0 +1,5 @@
+node_modules/
+.env
+pricehawk.db
+pricehawk.db-wal
+pricehawk.db-shm

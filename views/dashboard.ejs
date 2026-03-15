@@ -1,0 +1,144 @@
+<%- include('partials/header') %>
+
+<%
+  // Approximate exchange rates (from SEK)
+  var rates = {
+    SEK: 1, EUR: 0.088, USD: 0.095, GBP: 0.075, NOK: 1.01, DKK: 0.66
+  };
+  var dc = displayCurrency || 'SEK';
+  var currencySymbols = { SEK: 'kr', EUR: '\u20AC', USD: '$', GBP: '\u00A3', NOK: 'kr', DKK: 'kr' };
+  var dcSymbol = currencySymbols[dc] || dc;
+
+  function convertPrice(price, fromCurrency) {
+    if (!price) return null;
+    var from = fromCurrency || 'SEK';
+    if (from === dc) return price;
+    // Convert to SEK first, then to target
+    var inSEK = price / (rates[from] || 1);
+    return inSEK * (rates[dc] || 1);
+  }
+
+  function formatPrice(price, fromCurrency) {
+    var converted = convertPrice(price, fromCurrency);
+    if (converted === null) return '?';
+    return converted.toFixed(0);
+  }
+%>
+
+<div class="max-w-5xl mx-auto px-4 py-8">
+
+  <!-- Stats bar -->
+  <div class="flex flex-wrap gap-4 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl px-6 py-4 shadow-sm flex-1 min-w-0">
+      <div class="text-sm text-gray-500 dark:text-gray-400"><%= t('totalWatches') %></div>
+      <div class="text-2xl font-bold"><%= stats.total %></div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl px-6 py-4 shadow-sm flex-1 min-w-0">
+      <div class="text-sm text-gray-500 dark:text-gray-400"><%= t('totalSaved') %></div>
+      <div class="text-2xl font-bold text-green-500"><%= formatPrice(stats.saved, 'SEK') %> <%= dcSymbol %></div>
+    </div>
+    <div class="flex-shrink-0">
+      <a href="/api/export" class="inline-block bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm font-medium px-4 py-4 rounded-xl transition"><%= t('export') %></a>
+    </div>
+  </div>
+
+  <!-- Add product -->
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
+    <h2 class="text-xl font-bold mb-4"><%= t('dashboard') %></h2>
+    <form id="addForm" class="flex gap-3">
+      <input
+        type="url"
+        id="urlInput"
+        placeholder="<%= t('addUrl') %>"
+        required
+        class="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none text-sm"
+      />
+      <button type="submit" id="addBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition flex items-center gap-2">
+        <span>+</span> <%= t('add') %>
+      </button>
+    </form>
+    <div id="addError" class="text-red-500 text-sm mt-2 hidden"></div>
+    <div id="addLoading" class="text-indigo-500 text-sm mt-2 hidden"><span class="spinner"></span> <%= t('loading') %></div>
+  </div>
+
+  <!-- Products grid -->
+  <div id="productsGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <% if (products.length === 0) { %>
+      <div class="col-span-full text-center py-12 text-gray-400">
+        <div class="text-5xl mb-4">&#x1F985;</div>
+        <p><%= t('noProducts') %></p>
+      </div>
+    <% } else { %>
+      <% products.forEach(function(p) { %>
+        <%
+          var priceDiff = p.previous_price ? p.current_price - p.previous_price : 0;
+          var pctChange = p.previous_price ? ((priceDiff / p.previous_price) * 100).toFixed(1) : null;
+          var isDown = priceDiff < 0;
+          var isUp = priceDiff > 0;
+          var changeColor = isDown ? 'text-green-500' : isUp ? 'text-red-500' : 'text-gray-400';
+          var changeArrow = isDown ? '\u2193' : isUp ? '\u2191' : '';
+          var domain = '';
+          try { domain = new URL(p.url).hostname.replace('www.',''); } catch(e) {}
+          var safeTitle = (p.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        %>
+        <div class="product-card bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition" data-id="<%= p.id %>">
+          <% if (p.image_url) { %>
+            <div class="h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+              <img src="<%= p.image_url %>" class="w-full h-full object-contain" alt="" onerror="this.parentElement.style.display='none'" referrerpolicy="no-referrer">
+            </div>
+          <% } %>
+          <div class="p-4">
+            <div class="text-xs text-gray-400 mb-1"><%= domain %></div>
+            <h3 class="font-semibold text-sm mb-2 line-clamp-2"><%= p.title || p.url %></h3>
+            <div class="flex items-baseline gap-2 mb-3">
+              <span class="text-2xl font-bold"><%= formatPrice(p.current_price, p.currency) %></span>
+              <span class="text-sm text-gray-400"><%= dcSymbol %></span>
+              <% if (pctChange) { %>
+                <span class="text-sm font-medium <%= changeColor %>"><%= changeArrow %> <%= Math.abs(parseFloat(pctChange)) %>%</span>
+              <% } %>
+            </div>
+            <% if (p.previous_price) { %>
+              <div class="text-xs text-gray-400 mb-2"><%= t('since') %>: <%= formatPrice(p.previous_price, p.currency) %> <%= dcSymbol %></div>
+            <% } %>
+            <div class="flex gap-2 items-center text-xs">
+              <button onclick="showHistory(<%= p.id %>, '<%= safeTitle %>')" class="text-indigo-500 hover:text-indigo-700 font-medium">&#x1F4CA; <%= t('priceHistory') %></button>
+              <div class="flex-1"></div>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" <%= p.notify ? 'checked' : '' %> onchange="toggleNotify(<%= p.id %>, this.checked)" class="rounded">
+                <span>&#x1F514;</span>
+              </label>
+              <button onclick="deleteProduct(<%= p.id %>)" class="text-red-400 hover:text-red-600">&#x1F5D1;</button>
+            </div>
+            <div class="mt-2">
+              <input type="number" placeholder="<%= t('targetPrice') %>" value="<%= p.target_price || '' %>"
+                onchange="setTarget(<%= p.id %>, this.value)"
+                class="w-full text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 dark:bg-gray-700">
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+
+</div>
+
+<!-- Price history modal -->
+<div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="if(event.target===this)closeModal()">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-bold" id="modalTitle"><%= t('priceHistory') %></h3>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    </div>
+    <canvas id="historyChart" height="200"></canvas>
+  </div>
+</div>
+
+<!-- Notification panel -->
+<div id="notifPanel" class="fixed top-14 right-4 w-80 max-h-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden z-50 hidden">
+  <div class="p-4 border-b border-gray-200 dark:border-gray-700 font-bold"><%= lang === 'sv' ? 'Notifikationer' : 'Notifications' %></div>
+  <div id="notifList" class="overflow-y-auto max-h-72 p-2">
+    <div class="text-center text-gray-400 py-6 text-sm"><%= lang === 'sv' ? 'Inga notifikationer ännu' : 'No notifications yet' %></div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" class="">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PriceHawk</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
+  <header class="header-gradient text-white shadow-lg">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 text-white no-underline">
+        <span class="text-2xl">&#x1F985;</span>
+        <span class="text-xl font-bold tracking-tight">PriceHawk</span>
+      </a>
+      <div class="flex items-center gap-3">
+        <% if (user) { %>
+          <select onchange="setCurrency(this.value)" class="bg-white bg-opacity-20 text-white text-sm rounded px-1 py-1 cursor-pointer" style="outline:none">
+            <% ['SEK','EUR','USD','GBP','NOK','DKK'].forEach(function(c) { %>
+              <option value="<%= c %>" <%= (user.display_currency || 'SEK') === c ? 'selected' : '' %> class="text-gray-900"><%= c %></option>
+            <% }); %>
+          </select>
+        <% } %>
+        <button onclick="toggleLang()" class="lang-btn px-2 py-1 rounded text-sm font-medium bg-white bg-opacity-20 hover:bg-opacity-30 transition">
+          <%= lang === 'sv' ? 'EN' : 'SV' %>
+        </button>
+        <button onclick="toggleDark()" class="px-2 py-1 rounded text-sm bg-white bg-opacity-20 hover:bg-opacity-30 transition">
+          &#x1F319;
+        </button>
+        <% if (user) { %>
+          <button onclick="toggleNotifPanel()" class="relative px-2 py-1 rounded text-sm bg-white bg-opacity-20 hover:bg-opacity-30 transition">
+            &#x1F514;
+            <% if (typeof unseenNotifs !== 'undefined' && unseenNotifs > 0) { %>
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center"><%= unseenNotifs %></span>
+            <% } %>
+          </button>
+          <div class="flex items-center gap-2">
+            <% if (user.avatar) { %>
+              <img src="<%= user.avatar %>" class="w-8 h-8 rounded-full border-2 border-white border-opacity-50" alt="" referrerpolicy="no-referrer">
+            <% } %>
+            <span class="text-sm hidden sm:inline"><%= user.name %></span>
+            <a href="/logout" class="text-sm opacity-80 hover:opacity-100 ml-2"><%= t('logout') %></a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </header>
+  <main>
