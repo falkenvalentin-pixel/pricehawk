@@ -122,23 +122,26 @@ app.get('/logout', (req, res) => {
 // Add product
 app.post('/api/products', requireAuth, async (req, res) => {
   try {
-    const { url } = req.body;
+    const { url, manual_price } = req.body;
     if (!url || !url.startsWith('http')) {
       return res.status(400).json({ error: 'Invalid URL' });
     }
-    const scraped = await scrapeProduct(url);
+    let scraped = { title: null, price: null, image_url: null, currency: 'SEK' };
+    try {
+      scraped = await scrapeProduct(url);
+    } catch (err) {
+      console.log('[Scrape] Could not scrape, saving without price:', err.message);
+    }
+    if (manual_price) scraped.price = parseFloat(manual_price);
+    // Extract domain as fallback title
+    if (!scraped.title) {
+      try { scraped.title = new URL(url).hostname.replace('www.', ''); } catch {}
+    }
     const product = db.addProduct(req.user.id, { url, ...scraped });
-    res.json(product);
+    res.json({ ...product, no_price: !product.current_price });
   } catch (err) {
-    console.error('[Scrape error]', err.message);
-    const is403 = err.message && (err.message.includes('403') || err.message.includes('forbidden'));
-    const isTimeout = err.message && (err.message.includes('timeout') || err.message.includes('ETIMEDOUT'));
-    const isNetwork = err.message && (err.message.includes('ENOTFOUND') || err.message.includes('ECONNREFUSED'));
-    let reason = 'unknown';
-    if (is403) reason = 'blocked';
-    else if (isTimeout) reason = 'timeout';
-    else if (isNetwork) reason = 'network';
-    res.status(422).json({ error: 'Could not fetch price from that URL', reason });
+    console.error('[Add error]', err.message);
+    res.status(500).json({ error: 'Something went wrong' });
   }
 });
 

@@ -253,6 +253,28 @@ async function scrapeProduct(url) {
     }
   }
 
+  // Try free proxies as fallback
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  ];
+
+  for (const proxyUrl of proxies) {
+    try {
+      console.log(`[Scraper] Trying proxy...`);
+      const res = await axios.get(proxyUrl, { timeout: 15000 });
+      const $ = cheerio.load(res.data);
+      const result = extractFromHtml($, url);
+      if (result.price) {
+        console.log(`[Scraper] Proxy found price: ${result.price} ${result.currency}`);
+        return result;
+      }
+      if (!lastResult) lastResult = result;
+    } catch (err) {
+      console.log(`[Scraper] Proxy failed: ${err.message}`);
+    }
+  }
+
   // Return whatever we got (at least title/image maybe)
   if (lastResult) {
     console.log(`[Scraper] No price found, returning partial result`);
