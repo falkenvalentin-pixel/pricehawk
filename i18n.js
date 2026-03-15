@@ -4,7 +4,7 @@ const texts = {
     tagline: 'Bevaka priser. Spara pengar.',
     heroTitle: 'Missa aldrig en prissänkning',
     heroSub: 'Klistra in en produktlänk, så bevakar vi priset åt dig. Du får ett mejl direkt när priset sänks.',
-    ctaLogin: 'Kom igång med Google',
+    ctaLogin: 'Logga in med Google',
     ctaAdd: 'Lägg till bevakning',
     feature1Title: 'Automatisk prisbevakning',
     feature1Desc: 'Vi kollar priset var 6:e timme och meddelar dig direkt vid ändringar.',
