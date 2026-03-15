@@ -90,7 +90,7 @@ app.get('/auth/google', (req, res, next) => {
     const fakeProfile = {
       id: 'demo-user',
       displayName: 'Demo User',
-      emails: [{ value: 'demo@pricehawk.se' }],
+      emails: [{ value: 'demo@prisbevakning.com' }],
       photos: [{ value: '' }]
     };
     const user = db.findOrCreateUser(fakeProfile);
@@ -217,7 +217,7 @@ cron.schedule('0 */6 * * *', async () => {
 // Start
 db.initDb().then(() => {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n  🦅 PriceHawk running at http://localhost:${PORT}\n`);
+    console.log(`\n  Prisbevakning.com running at http://localhost:${PORT}\n`);
     if (!googleConfigured) {
       console.log('  ⚠  Google OAuth not configured — click "Login" for demo mode\n');
     }

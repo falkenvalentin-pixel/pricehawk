@@ -1,4 +1,4 @@
-// PriceHawk Frontend
+// Prisbevakning.com Frontend
 
 // ========== i18n ==========
 const LANG = document.documentElement.lang || 'sv';

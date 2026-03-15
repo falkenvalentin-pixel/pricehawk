@@ -1,6 +1,6 @@
 const texts = {
   sv: {
-    appName: 'PriceHawk',
+    appName: 'Prisbevakning.com',
     tagline: 'Bevaka priser. Spara pengar.',
     heroTitle: 'Missa aldrig en prissänkning',
     heroSub: 'Klistra in en produktlänk, så bevakar vi priset åt dig. Du får ett mejl direkt när priset ändras.',
@@ -40,7 +40,7 @@ const texts = {
     emailSubjectDown: 'Prissänkning på {title}!',
     emailSubjectUp: 'Prisändring på {title}',
     emailSubjectTarget: '{title} har nått ditt målpris!',
-    emailBody: 'Hej {name}!\n\n{title} har ändrat pris.\n\nTidigare: {old} {currency}\nNu: {new} {currency}\n\nKolla in det här:\n{url}\n\n/ PriceHawk',
+    emailBody: 'Hej {name}!\n\n{title} har ändrat pris.\n\nTidigare: {old} {currency}\nNu: {new} {currency}\n\nKolla in det här:\n{url}\n\n/ Prisbevakning.com',
     loginTitle: 'Logga in',
     loginDesc: 'Logga in för att börja bevaka priser',
     currency: 'Valuta',
@@ -48,10 +48,10 @@ const texts = {
     step1: 'Klistra in en produktlänk',
     step2: 'Vi bevakar priset åt dig',
     step3: 'Få mejl vid prisändring',
-    footer: '© 2026 PriceHawk. Byggd med kärlek.',
+    footer: '© 2026 Prisbevakning.com. Byggd med kärlek.',
   },
   en: {
-    appName: 'PriceHawk',
+    appName: 'Prisbevakning.com',
     tagline: 'Track prices. Save money.',
     heroTitle: 'Never miss a price drop',
     heroSub: 'Paste a product link and we\'ll track the price for you. Get an email the moment it changes.',
@@ -91,7 +91,7 @@ const texts = {
     emailSubjectDown: 'Price drop on {title}!',
     emailSubjectUp: 'Price change on {title}',
     emailSubjectTarget: '{title} reached your target price!',
-    emailBody: 'Hi {name}!\n\n{title} changed price.\n\nBefore: {old} {currency}\nNow: {new} {currency}\n\nCheck it out:\n{url}\n\n/ PriceHawk',
+    emailBody: 'Hi {name}!\n\n{title} changed price.\n\nBefore: {old} {currency}\nNow: {new} {currency}\n\nCheck it out:\n{url}\n\n/ Prisbevakning.com',
     loginTitle: 'Log in',
     loginDesc: 'Log in to start tracking prices',
     currency: 'Currency',
@@ -99,7 +99,7 @@ const texts = {
     step1: 'Paste a product link',
     step2: 'We track the price for you',
     step3: 'Get emailed when it changes',
-    footer: '© 2026 PriceHawk. Built with love.',
+    footer: '© 2026 Prisbevakning.com. Built with love.',
   }
 };
 

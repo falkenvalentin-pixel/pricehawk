@@ -43,7 +43,7 @@ async function sendPriceAlert({ email, name, lang, product, oldPrice, newPrice }
   const emoji = isDown ? '📉' : '📈';
 
   await tr.sendMail({
-    from: `"PriceHawk" <${process.env.GMAIL_USER}>`,
+    from: `"Prisbevakning.com" <${process.env.GMAIL_USER}>`,
     to: email,
     subject: `${emoji} ${subject}`,
     text: body,
@@ -59,7 +59,7 @@ async function sendPriceAlert({ email, name, lang, product, oldPrice, newPrice }
         <a href="${product.url}" style="display: inline-block; margin-top: 15px; padding: 10px 25px; background: #6366f1; color: white; text-decoration: none; border-radius: 8px;">
           ${lang === 'en' ? 'View product' : 'Se produkten'}
         </a>
-        <p style="margin-top: 30px; font-size: 12px; color: #888;">/ PriceHawk</p>
+        <p style="margin-top: 30px; font-size: 12px; color: #888;">/ Prisbevakning.com</p>
       </div>
     `,
   });
