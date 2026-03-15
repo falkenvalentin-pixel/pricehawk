@@ -253,25 +253,24 @@ async function scrapeProduct(url) {
     }
   }
 
-  // Try free proxies as fallback
-  const proxies = [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  ];
-
-  for (const proxyUrl of proxies) {
+  // Try ScraperAPI as fallback (1000 free requests/month)
+  const scraperApiKey = process.env.SCRAPER_API_KEY;
+  if (scraperApiKey) {
     try {
-      console.log(`[Scraper] Trying proxy...`);
-      const res = await axios.get(proxyUrl, { timeout: 15000 });
+      console.log(`[Scraper] Trying ScraperAPI...`);
+      const res = await axios.get('https://api.scraperapi.com', {
+        params: { api_key: scraperApiKey, url: url, render: 'false' },
+        timeout: 30000,
+      });
       const $ = cheerio.load(res.data);
       const result = extractFromHtml($, url);
       if (result.price) {
-        console.log(`[Scraper] Proxy found price: ${result.price} ${result.currency}`);
+        console.log(`[Scraper] ScraperAPI found price: ${result.price} ${result.currency}`);
         return result;
       }
-      if (!lastResult) lastResult = result;
+      if (!lastResult || result.title) lastResult = result;
     } catch (err) {
-      console.log(`[Scraper] Proxy failed: ${err.message}`);
+      console.log(`[Scraper] ScraperAPI failed: ${err.message}`);
     }
   }
 
