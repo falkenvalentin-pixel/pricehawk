@@ -119,6 +119,8 @@ app.get('/logout', (req, res) => {
 
 // Add product
 app.post('/api/products', requireAuth, async (req, res) => {
+  req.setTimeout(90000);
+  res.setTimeout(90000);
   try {
     const { url, manual_price } = req.body;
     if (!url || !url.startsWith('http')) {

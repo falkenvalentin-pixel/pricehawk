@@ -42,11 +42,15 @@ if (addForm) {
     btn.innerHTML = '<span class="spinner"></span> ' + (LANG === 'sv' ? 'Hämtar...' : 'Fetching...');
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000);
       const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: urlInput.value })
+        body: JSON.stringify({ url: urlInput.value }),
+        signal: controller.signal
       });
+      clearTimeout(timeout);
 
       const data = await res.json();
 

@@ -259,7 +259,7 @@ async function scrapeProduct(url) {
     try {
       const res = await axios.get(url, {
         headers: h,
-        timeout: 8000,
+        timeout: 5000,
         maxRedirects: 5,
       });
       const $ = cheerio.load(res.data);
