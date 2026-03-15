@@ -70,7 +70,7 @@ if (addForm) {
       card.innerHTML =
         '<div class="p-4">' +
           '<div class="text-xs text-gray-400 mb-1">' + domain + '</div>' +
-          '<h3 class="font-semibold text-sm mb-2 line-clamp-2">' + (data.title || domain) + '</h3>' +
+          '<h3 class="font-semibold text-sm mb-2 line-clamp-2"><a href="' + data.url + '" target="_blank" rel="noopener" class="hover:text-indigo-500 transition">' + (data.title || domain) + '</a></h3>' +
           '<div class="flex items-center gap-2 mb-3 text-indigo-500" id="loading-' + data.id + '">' +
             '<span class="spinner"></span>' +
             '<span>' + (LANG === 'sv' ? 'Hämtar pris...' : 'Fetching price...') + ' <span id="timer-' + data.id + '">0</span>s</span>' +
@@ -129,7 +129,7 @@ async function pollForPrice(productId, card, timerInterval) {
           (p.image_url ? '<div class="h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden"><img src="' + p.image_url + '" class="w-full h-full object-contain" alt="" onerror="this.parentElement.style.display=\'none\'" referrerpolicy="no-referrer"></div>' : '') +
           '<div class="p-4">' +
             '<div class="text-xs text-gray-400 mb-1">' + domain + '</div>' +
-            '<h3 class="font-semibold text-sm mb-2 line-clamp-2">' + (p.title || p.url) + '</h3>' +
+            '<h3 class="font-semibold text-sm mb-2 line-clamp-2"><a href="' + p.url + '" target="_blank" rel="noopener" class="hover:text-indigo-500 transition">' + (p.title || p.url) + '</a></h3>' +
             '<div class="flex items-baseline gap-2 mb-3">' +
               '<span class="text-2xl font-bold">' + Math.round(p.current_price) + '</span>' +
               '<span class="text-sm text-gray-400">' + (p.currency || 'SEK') + '</span>' +
