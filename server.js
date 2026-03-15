@@ -183,8 +183,8 @@ app.post('/api/notifications/seen', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-// ========== CRON: Check prices every 6 hours ==========
-cron.schedule('0 */6 * * *', async () => {
+// ========== CRON: Check prices once per day at 07:00 ==========
+cron.schedule('0 7 * * *', async () => {
   console.log('[Cron] Checking prices...');
   const products = db.getAllProductsForCron();
   for (const product of products) {
@@ -193,24 +193,19 @@ cron.schedule('0 */6 * * *', async () => {
       if (!scraped.price) continue;
       if (scraped.price === product.current_price) continue;
 
+      const oldPrice = product.current_price;
       const updated = db.updatePrice(product.id, scraped.price);
-      if (!product.notify) continue;
 
-      const shouldNotify =
-        scraped.price !== product.current_price ||
-        (product.target_price && scraped.price <= product.target_price);
+      // Only notify on price drops
+      if (scraped.price < oldPrice && oldPrice && product.notify) {
+        db.addNotification(product.user_id, product.id, product.title, oldPrice, scraped.price, product.currency);
 
-      if (shouldNotify && product.current_price) {
-        // Save notification in app
-        db.addNotification(product.user_id, product.id, product.title, product.current_price, scraped.price, product.currency);
-
-        // Also try email if configured
         await sendPriceAlert({
           email: product.email,
           name: product.user_name,
           lang: product.lang,
           product: updated,
-          oldPrice: product.current_price,
+          oldPrice: oldPrice,
           newPrice: scraped.price,
         });
       }
