@@ -70,7 +70,7 @@ if (addForm) {
     errorEl.classList.add('hidden');
     loadingEl.classList.remove('hidden');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
+    btn.innerHTML = '<span class="spinner"></span> ' + (LANG === 'sv' ? 'Hämtar...' : 'Fetching...');
 
     try {
       const res = await fetch('/api/products', {
@@ -79,19 +79,51 @@ if (addForm) {
         body: JSON.stringify({ url: urlInput.value })
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(L[data.reason] || L.unknown);
       }
 
-      location.reload();
+      // Remove "no products" placeholder
+      const placeholder = document.querySelector('#productsGrid .col-span-full');
+      if (placeholder) placeholder.remove();
+
+      // Add product card dynamically
+      const grid = document.getElementById('productsGrid');
+      const card = document.createElement('div');
+      let domain = '';
+      try { domain = new URL(data.url).hostname.replace('www.', ''); } catch {}
+      const priceText = data.current_price ? Math.round(data.current_price) : '?';
+      const currency = data.currency || 'SEK';
+
+      card.className = 'product-card bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition';
+      card.setAttribute('data-id', data.id);
+      card.style.animation = 'fadeIn 0.3s ease';
+      card.innerHTML = (data.image_url ? '<div class="h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden"><img src="' + data.image_url + '" class="w-full h-full object-contain" alt="" onerror="this.parentElement.style.display=\'none\'" referrerpolicy="no-referrer"></div>' : '') +
+        '<div class="p-4">' +
+          '<div class="text-xs text-gray-400 mb-1">' + domain + '</div>' +
+          '<h3 class="font-semibold text-sm mb-2 line-clamp-2">' + (data.title || data.url) + '</h3>' +
+          '<div class="flex items-baseline gap-2 mb-3">' +
+            '<span class="text-2xl font-bold">' + priceText + '</span>' +
+            '<span class="text-sm text-gray-400">' + currency + '</span>' +
+          '</div>' +
+          '<div class="flex gap-2 items-center text-xs">' +
+            '<button onclick="showHistory(' + data.id + ', \'' + (data.title || '').replace(/'/g, "\\'") + '\')" class="text-indigo-500 hover:text-indigo-700 font-medium">\u{1F4CA} ' + L.price + '</button>' +
+            '<div class="flex-1"></div>' +
+            '<label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked onchange="toggleNotify(' + data.id + ', this.checked)" class="rounded"><span>\u{1F514}</span></label>' +
+            '<button onclick="deleteProduct(' + data.id + ')" class="text-red-400 hover:text-red-600">\u{1F5D1}</button>' +
+          '</div>' +
+        '</div>';
+      grid.prepend(card);
+      urlInput.value = '';
     } catch (err) {
       errorEl.textContent = err.message;
       errorEl.classList.remove('hidden');
-      btn.disabled = false;
-      btn.innerHTML = '<span>+</span> ' + L.track;
     } finally {
       loadingEl.classList.add('hidden');
+      btn.disabled = false;
+      btn.innerHTML = '<span>+</span> ' + L.track;
     }
   });
 }

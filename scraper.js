@@ -232,62 +232,14 @@ async function scrapeProduct(url) {
   ];
 
   let lastResult = null;
-  let blocked = false;
 
-  // Try first header set only (fast, 5s timeout)
-  try {
-    const res = await axios.get(url, {
-      headers: headers[0],
-      timeout: 5000,
-      maxRedirects: 5,
-    });
-    const $ = cheerio.load(res.data);
-    const result = extractFromHtml($, url);
-    if (result.price) {
-      console.log(`[Scraper] Found price: ${result.price} ${result.currency}`);
-      return result;
-    }
-    lastResult = result;
-  } catch (err) {
-    console.log(`[Scraper] Direct attempt failed: ${err.message}`);
-    if (err.response && (err.response.status === 403 || err.response.status === 503)) {
-      blocked = true;
-    }
-  }
-
-  // If blocked (403/503), skip other headers and go straight to ScraperAPI
-  if (!blocked) {
-    for (let i = 1; i < headers.length; i++) {
-      try {
-        const res = await axios.get(url, {
-          headers: headers[i],
-          timeout: 5000,
-          maxRedirects: 5,
-        });
-        const $ = cheerio.load(res.data);
-        const result = extractFromHtml($, url);
-        if (result.price) {
-          console.log(`[Scraper] Found price: ${result.price} ${result.currency}`);
-          return result;
-        }
-        lastResult = result;
-      } catch (err) {
-        console.log(`[Scraper] Attempt ${i+1} failed: ${err.message}`);
-        if (err.response && (err.response.status === 403 || err.response.status === 503)) {
-          blocked = true;
-          break;
-        }
-      }
-    }
-  }
-
-  // Try ScraperAPI as fallback (1000 free requests/month)
+  // If ScraperAPI is configured, use it FIRST (most reliable)
   const scraperApiKey = process.env.SCRAPER_API_KEY;
   if (scraperApiKey) {
     try {
-      console.log(`[Scraper] Trying ScraperAPI...`);
+      console.log(`[Scraper] Using ScraperAPI...`);
       const res = await axios.get('https://api.scraperapi.com', {
-        params: { api_key: scraperApiKey, url: url, render: 'false' },
+        params: { api_key: scraperApiKey, url: url },
         timeout: 30000,
       });
       const $ = cheerio.load(res.data);
@@ -296,9 +248,30 @@ async function scrapeProduct(url) {
         console.log(`[Scraper] ScraperAPI found price: ${result.price} ${result.currency}`);
         return result;
       }
-      if (!lastResult || result.title) lastResult = result;
+      lastResult = result;
     } catch (err) {
       console.log(`[Scraper] ScraperAPI failed: ${err.message}`);
+    }
+  }
+
+  // Fallback: try direct headers
+  for (const h of headers) {
+    try {
+      const res = await axios.get(url, {
+        headers: h,
+        timeout: 8000,
+        maxRedirects: 5,
+      });
+      const $ = cheerio.load(res.data);
+      const result = extractFromHtml($, url);
+      if (result.price) {
+        console.log(`[Scraper] Direct found price: ${result.price} ${result.currency}`);
+        return result;
+      }
+      if (!lastResult || result.title) lastResult = result;
+    } catch (err) {
+      console.log(`[Scraper] Direct failed: ${err.message}`);
+      if (err.response && err.response.status === 403) break;
     }
   }
 
