@@ -42,15 +42,11 @@ if (addForm) {
     btn.innerHTML = '<span class="spinner"></span> ' + (LANG === 'sv' ? 'Hämtar...' : 'Fetching...');
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 60000);
       const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: urlInput.value }),
-        signal: controller.signal
+        body: JSON.stringify({ url: urlInput.value })
       });
-      clearTimeout(timeout);
 
       const data = await res.json();
 
@@ -62,34 +58,47 @@ if (addForm) {
       const placeholder = document.querySelector('#productsGrid .col-span-full');
       if (placeholder) placeholder.remove();
 
-      // Add product card dynamically
+      // Add product card immediately (with loading state)
       const grid = document.getElementById('productsGrid');
       const card = document.createElement('div');
       let domain = '';
       try { domain = new URL(data.url).hostname.replace('www.', ''); } catch {}
-      const priceText = data.current_price ? Math.round(data.current_price) : '?';
-      const currency = data.currency || 'SEK';
 
       card.className = 'product-card bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition';
       card.setAttribute('data-id', data.id);
       card.style.animation = 'fadeIn 0.3s ease';
-      card.innerHTML = (data.image_url ? '<div class="h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden"><img src="' + data.image_url + '" class="w-full h-full object-contain" alt="" onerror="this.parentElement.style.display=\'none\'" referrerpolicy="no-referrer"></div>' : '') +
+      card.innerHTML =
         '<div class="p-4">' +
           '<div class="text-xs text-gray-400 mb-1">' + domain + '</div>' +
-          '<h3 class="font-semibold text-sm mb-2 line-clamp-2">' + (data.title || data.url) + '</h3>' +
-          '<div class="flex items-baseline gap-2 mb-3">' +
-            '<span class="text-2xl font-bold">' + priceText + '</span>' +
-            '<span class="text-sm text-gray-400">' + currency + '</span>' +
+          '<h3 class="font-semibold text-sm mb-2 line-clamp-2">' + (data.title || domain) + '</h3>' +
+          '<div class="flex items-center gap-2 mb-3 text-indigo-500" id="loading-' + data.id + '">' +
+            '<span class="spinner"></span>' +
+            '<span>' + (LANG === 'sv' ? 'Hämtar pris...' : 'Fetching price...') + ' <span id="timer-' + data.id + '">0</span>s</span>' +
           '</div>' +
           '<div class="flex gap-2 items-center text-xs">' +
-            '<button onclick="showHistory(' + data.id + ', \'' + (data.title || '').replace(/'/g, "\\'") + '\')" class="text-indigo-500 hover:text-indigo-700 font-medium">\u{1F4CA} ' + L.price + '</button>' +
             '<div class="flex-1"></div>' +
-            '<label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked onchange="toggleNotify(' + data.id + ', this.checked)" class="rounded"><span>\u{1F514}</span></label>' +
             '<button onclick="deleteProduct(' + data.id + ')" class="text-red-400 hover:text-red-600">\u{1F5D1}</button>' +
           '</div>' +
         '</div>';
       grid.prepend(card);
       urlInput.value = '';
+
+      // Reset button
+      loadingEl.classList.add('hidden');
+      btn.disabled = false;
+      btn.innerHTML = '<span>+</span> ' + L.track;
+
+      // Start timer
+      let seconds = 0;
+      const timerEl = document.getElementById('timer-' + data.id);
+      const timerInterval = setInterval(() => {
+        seconds++;
+        if (timerEl) timerEl.textContent = seconds;
+      }, 1000);
+
+      // Poll for scraped data
+      pollForPrice(data.id, card, timerInterval);
+      return;
     } catch (err) {
       errorEl.textContent = err.message;
       errorEl.classList.remove('hidden');
@@ -99,6 +108,49 @@ if (addForm) {
       btn.innerHTML = '<span>+</span> ' + L.track;
     }
   });
+}
+
+// ========== Poll for price after adding ==========
+async function pollForPrice(productId, card, timerInterval) {
+  const maxAttempts = 30; // 30 x 2s = 60s
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const res = await fetch('/api/products/' + productId);
+      if (!res.ok) continue;
+      const p = await res.json();
+      if (p.current_price) {
+        clearInterval(timerInterval);
+        // Update card with full data
+        let domain = '';
+        try { domain = new URL(p.url).hostname.replace('www.', ''); } catch {}
+        const safeTitle = (p.title || '').replace(/'/g, "\\'");
+        card.innerHTML =
+          (p.image_url ? '<div class="h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden"><img src="' + p.image_url + '" class="w-full h-full object-contain" alt="" onerror="this.parentElement.style.display=\'none\'" referrerpolicy="no-referrer"></div>' : '') +
+          '<div class="p-4">' +
+            '<div class="text-xs text-gray-400 mb-1">' + domain + '</div>' +
+            '<h3 class="font-semibold text-sm mb-2 line-clamp-2">' + (p.title || p.url) + '</h3>' +
+            '<div class="flex items-baseline gap-2 mb-3">' +
+              '<span class="text-2xl font-bold">' + Math.round(p.current_price) + '</span>' +
+              '<span class="text-sm text-gray-400">' + (p.currency || 'SEK') + '</span>' +
+            '</div>' +
+            '<div class="flex gap-2 items-center text-xs">' +
+              '<button onclick="showHistory(' + p.id + ', \'' + safeTitle + '\')" class="text-indigo-500 hover:text-indigo-700 font-medium">\u{1F4CA} ' + L.price + '</button>' +
+              '<div class="flex-1"></div>' +
+              '<label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" checked onchange="toggleNotify(' + p.id + ', this.checked)" class="rounded"><span>\u{1F514}</span></label>' +
+              '<button onclick="deleteProduct(' + p.id + ')" class="text-red-400 hover:text-red-600">\u{1F5D1}</button>' +
+            '</div>' +
+          '</div>';
+        return;
+      }
+    } catch {}
+  }
+  // Timeout — show what we have
+  clearInterval(timerInterval);
+  const loadingEl = document.getElementById('loading-' + productId);
+  if (loadingEl) {
+    loadingEl.innerHTML = '<span class="text-gray-400">' + (LANG === 'sv' ? 'Priset kunde inte hämtas' : 'Could not fetch price') + '</span>';
+  }
 }
 
 // ========== Delete Product ==========

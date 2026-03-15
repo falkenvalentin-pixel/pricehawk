@@ -117,32 +117,37 @@ app.get('/logout', (req, res) => {
 
 // ========== API ==========
 
-// Add product
+// Add product (async: save immediately, scrape in background)
 app.post('/api/products', requireAuth, async (req, res) => {
-  req.setTimeout(90000);
-  res.setTimeout(90000);
   try {
-    const { url, manual_price } = req.body;
+    const { url } = req.body;
     if (!url || !url.startsWith('http')) {
       return res.status(400).json({ error: 'Invalid URL' });
     }
-    let scraped = { title: null, price: null, image_url: null, currency: 'SEK' };
-    try {
-      scraped = await scrapeProduct(url);
-    } catch (err) {
-      console.log('[Scrape] Could not scrape, saving without price:', err.message);
-    }
-    if (manual_price) scraped.price = parseFloat(manual_price);
-    // Extract domain as fallback title
-    if (!scraped.title) {
-      try { scraped.title = new URL(url).hostname.replace('www.', ''); } catch {}
-    }
-    const product = db.addProduct(req.user.id, { url, ...scraped });
-    res.json({ ...product, no_price: !product.current_price });
+    // Save product immediately with domain as title
+    let title = null;
+    try { title = new URL(url).hostname.replace('www.', ''); } catch {}
+    const product = db.addProduct(req.user.id, { url, title, price: null, image_url: null, currency: 'SEK' });
+    // Return immediately so frontend can show the card
+    res.json({ ...product, scraping: true });
+    // Scrape in background and update DB when done
+    scrapeProduct(url).then(scraped => {
+      db.updateScrapedData(product.id, scraped);
+      console.log(`[Scrape] Background done for ${product.id}: ${scraped.price} ${scraped.currency}`);
+    }).catch(err => {
+      console.log(`[Scrape] Background failed for ${product.id}: ${err.message}`);
+    });
   } catch (err) {
     console.error('[Add error]', err.message);
     res.status(500).json({ error: 'Something went wrong' });
   }
+});
+
+// Poll product (frontend polls until price appears)
+app.get('/api/products/:id', requireAuth, (req, res) => {
+  const product = db.getProduct(parseInt(req.params.id), req.user.id);
+  if (!product) return res.status(404).json({ error: 'Not found' });
+  res.json(product);
 });
 
 // Delete product

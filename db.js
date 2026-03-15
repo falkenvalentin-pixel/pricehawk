@@ -155,6 +155,22 @@ const queries = {
     }
   },
 
+  updateScrapedData(productId, scraped) {
+    const updates = [];
+    const params = [];
+    if (scraped.title) { updates.push('title = ?'); params.push(scraped.title); }
+    if (scraped.image_url) { updates.push('image_url = ?'); params.push(scraped.image_url); }
+    if (scraped.price) { updates.push('current_price = ?'); params.push(scraped.price); }
+    if (scraped.currency) { updates.push('currency = ?'); params.push(scraped.currency); }
+    if (updates.length > 0) {
+      params.push(productId);
+      run(`UPDATE products SET ${updates.join(', ')} WHERE id = ?`, params);
+    }
+    if (scraped.price) {
+      run('INSERT INTO price_history (product_id, price) VALUES (?, ?)', [productId, scraped.price]);
+    }
+  },
+
   updatePrice(productId, newPrice) {
     const product = get('SELECT * FROM products WHERE id = ?', [productId]);
     if (!product) return null;
