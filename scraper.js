@@ -232,24 +232,52 @@ async function scrapeProduct(url) {
   ];
 
   let lastResult = null;
+  let blocked = false;
 
-  for (const h of headers) {
-    try {
-      const res = await axios.get(url, {
-        headers: h,
-        timeout: 15000,
-        maxRedirects: 5,
-      });
-      const $ = cheerio.load(res.data);
-      const result = extractFromHtml($, url);
+  // Try first header set only (fast, 5s timeout)
+  try {
+    const res = await axios.get(url, {
+      headers: headers[0],
+      timeout: 5000,
+      maxRedirects: 5,
+    });
+    const $ = cheerio.load(res.data);
+    const result = extractFromHtml($, url);
+    if (result.price) {
+      console.log(`[Scraper] Found price: ${result.price} ${result.currency}`);
+      return result;
+    }
+    lastResult = result;
+  } catch (err) {
+    console.log(`[Scraper] Direct attempt failed: ${err.message}`);
+    if (err.response && (err.response.status === 403 || err.response.status === 503)) {
+      blocked = true;
+    }
+  }
 
-      if (result.price) {
-        console.log(`[Scraper] Found price: ${result.price} ${result.currency}`);
-        return result;
+  // If blocked (403/503), skip other headers and go straight to ScraperAPI
+  if (!blocked) {
+    for (let i = 1; i < headers.length; i++) {
+      try {
+        const res = await axios.get(url, {
+          headers: headers[i],
+          timeout: 5000,
+          maxRedirects: 5,
+        });
+        const $ = cheerio.load(res.data);
+        const result = extractFromHtml($, url);
+        if (result.price) {
+          console.log(`[Scraper] Found price: ${result.price} ${result.currency}`);
+          return result;
+        }
+        lastResult = result;
+      } catch (err) {
+        console.log(`[Scraper] Attempt ${i+1} failed: ${err.message}`);
+        if (err.response && (err.response.status === 403 || err.response.status === 503)) {
+          blocked = true;
+          break;
+        }
       }
-      lastResult = result;
-    } catch (err) {
-      console.log(`[Scraper] Attempt failed: ${err.message}`);
     }
   }
 
