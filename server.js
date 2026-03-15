@@ -246,7 +246,7 @@ cron.schedule('0 */6 * * *', async () => {
 });
 
 // Start
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n  🦅 PriceHawk running at http://localhost:${PORT}\n`);
   if (!googleConfigured) {
     console.log('  ⚠  Google OAuth not configured — click "Login" for demo mode\n');
