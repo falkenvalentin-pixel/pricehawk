@@ -118,19 +118,6 @@ async function toggleNotify(id, checked) {
   });
 }
 
-// ========== Set Target Price ==========
-let targetTimeout;
-async function setTarget(id, value) {
-  clearTimeout(targetTimeout);
-  targetTimeout = setTimeout(async () => {
-    await fetch(`/api/products/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target_price: value ? parseFloat(value) : null })
-    });
-  }, 500);
-}
-
 // ========== Price History Modal ==========
 let historyChart = null;
 
