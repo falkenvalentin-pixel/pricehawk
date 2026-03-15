@@ -1,46 +1,6 @@
 <%- include('partials/header') %>
 
-<%
-  // Approximate exchange rates (from SEK)
-  var rates = {
-    SEK: 1, EUR: 0.088, USD: 0.095, GBP: 0.075, NOK: 1.01, DKK: 0.66
-  };
-  var dc = displayCurrency || 'SEK';
-  var currencySymbols = { SEK: 'kr', EUR: '\u20AC', USD: '$', GBP: '\u00A3', NOK: 'kr', DKK: 'kr' };
-  var dcSymbol = currencySymbols[dc] || dc;
-
-  function convertPrice(price, fromCurrency) {
-    if (!price) return null;
-    var from = fromCurrency || 'SEK';
-    if (from === dc) return price;
-    // Convert to SEK first, then to target
-    var inSEK = price / (rates[from] || 1);
-    return inSEK * (rates[dc] || 1);
-  }
-
-  function formatPrice(price, fromCurrency) {
-    var converted = convertPrice(price, fromCurrency);
-    if (converted === null) return '?';
-    return converted.toFixed(0);
-  }
-%>
-
 <div class="max-w-5xl mx-auto px-4 py-8">
-
-  <!-- Stats bar -->
-  <div class="flex flex-wrap gap-4 mb-8">
-    <div class="bg-white dark:bg-gray-800 rounded-xl px-6 py-4 shadow-sm flex-1 min-w-0">
-      <div class="text-sm text-gray-500 dark:text-gray-400"><%= t('totalWatches') %></div>
-      <div class="text-2xl font-bold"><%= stats.total %></div>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl px-6 py-4 shadow-sm flex-1 min-w-0">
-      <div class="text-sm text-gray-500 dark:text-gray-400"><%= t('totalSaved') %></div>
-      <div class="text-2xl font-bold text-green-500"><%= formatPrice(stats.saved, 'SEK') %> <%= dcSymbol %></div>
-    </div>
-    <div class="flex-shrink-0">
-      <a href="/api/export" class="inline-block bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm font-medium px-4 py-4 rounded-xl transition"><%= t('export') %></a>
-    </div>
-  </div>
 
   <!-- Add product -->
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 mb-8">
@@ -91,14 +51,14 @@
             <div class="text-xs text-gray-400 mb-1"><%= domain %></div>
             <h3 class="font-semibold text-sm mb-2 line-clamp-2"><%= p.title || p.url %></h3>
             <div class="flex items-baseline gap-2 mb-3">
-              <span class="text-2xl font-bold"><%= formatPrice(p.current_price, p.currency) %></span>
-              <span class="text-sm text-gray-400"><%= dcSymbol %></span>
+              <span class="text-2xl font-bold"><%= p.current_price ? Math.round(p.current_price) : '?' %></span>
+              <span class="text-sm text-gray-400"><%= p.currency || 'SEK' %></span>
               <% if (pctChange) { %>
                 <span class="text-sm font-medium <%= changeColor %>"><%= changeArrow %> <%= Math.abs(parseFloat(pctChange)) %>%</span>
               <% } %>
             </div>
             <% if (p.previous_price) { %>
-              <div class="text-xs text-gray-400 mb-2"><%= t('since') %>: <%= formatPrice(p.previous_price, p.currency) %> <%= dcSymbol %></div>
+              <div class="text-xs text-gray-400 mb-2"><%= t('since') %>: <%= Math.round(p.previous_price) %> <%= p.currency || 'SEK' %></div>
             <% } %>
             <div class="flex gap-2 items-center text-xs">
               <button onclick="showHistory(<%= p.id %>, '<%= safeTitle %>')" class="text-indigo-500 hover:text-indigo-700 font-medium">&#x1F4CA; <%= t('priceHistory') %></button>

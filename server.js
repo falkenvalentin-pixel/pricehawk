@@ -76,10 +76,8 @@ function requireAuth(req, res, next) {
 app.get('/', (req, res) => {
   if (req.isAuthenticated()) {
     const products = db.getUserProducts(req.user.id);
-    const stats = db.getStats(req.user.id);
-    const displayCurrency = req.user.display_currency || 'SEK';
     const unseenNotifs = db.getUnseenCount(req.user.id);
-    res.render('dashboard', { products, stats, displayCurrency, unseenNotifs });
+    res.render('dashboard', { products, unseenNotifs });
   } else {
     res.render('landing');
   }
@@ -165,38 +163,6 @@ app.get('/api/products/:id/history', requireAuth, (req, res) => {
   res.json(history);
 });
 
-// Change language
-app.patch('/api/user/lang', (req, res) => {
-  const lang = req.body.lang === 'en' ? 'en' : 'sv';
-  if (req.isAuthenticated()) {
-    db.updateLang(req.user.id, lang);
-  }
-  req.session.lang = lang;
-  res.json({ ok: true });
-});
-
-// Change display currency
-app.patch('/api/user/currency', requireAuth, (req, res) => {
-  const allowed = ['SEK', 'EUR', 'USD', 'GBP', 'NOK', 'DKK'];
-  const currency = allowed.includes(req.body.currency) ? req.body.currency : 'SEK';
-  db.updateCurrency(req.user.id, currency);
-  res.json({ ok: true });
-});
-
-// CSV export
-app.get('/api/export', requireAuth, (req, res) => {
-  const products = db.getUserProducts(req.user.id);
-  const lang = req.user.lang || 'sv';
-  const header = lang === 'sv'
-    ? 'Titel,URL,Pris,Tidigare pris,Valuta,Målpris,Tillagd'
-    : 'Title,URL,Price,Previous Price,Currency,Target Price,Added';
-  const rows = products.map(p =>
-    `"${(p.title || '').replace(/"/g, '""')}","${p.url}",${p.current_price || ''},${p.previous_price || ''},${p.currency},${p.target_price || ''},${p.created_at}`
-  );
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename=pricehawk-export.csv');
-  res.send('\uFEFF' + header + '\n' + rows.join('\n'));
-});
 
 // Notifications
 app.get('/api/notifications', requireAuth, (req, res) => {

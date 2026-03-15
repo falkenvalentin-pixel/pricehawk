@@ -17,19 +17,6 @@
       </a>
       <div class="flex items-center gap-3">
         <% if (user) { %>
-          <select onchange="setCurrency(this.value)" class="bg-white bg-opacity-20 text-white text-sm rounded px-1 py-1 cursor-pointer" style="outline:none">
-            <% ['SEK','EUR','USD','GBP','NOK','DKK'].forEach(function(c) { %>
-              <option value="<%= c %>" <%= (user.display_currency || 'SEK') === c ? 'selected' : '' %> class="text-gray-900"><%= c %></option>
-            <% }); %>
-          </select>
-        <% } %>
-        <button onclick="toggleLang()" class="lang-btn px-2 py-1 rounded text-sm font-medium bg-white bg-opacity-20 hover:bg-opacity-30 transition">
-          <%= lang === 'sv' ? 'EN' : 'SV' %>
-        </button>
-        <button onclick="toggleDark()" class="px-2 py-1 rounded text-sm bg-white bg-opacity-20 hover:bg-opacity-30 transition">
-          &#x1F319;
-        </button>
-        <% if (user) { %>
           <button onclick="toggleNotifPanel()" class="relative px-2 py-1 rounded text-sm bg-white bg-opacity-20 hover:bg-opacity-30 transition">
             &#x1F514;
             <% if (typeof unseenNotifs !== 'undefined' && unseenNotifs > 0) { %>

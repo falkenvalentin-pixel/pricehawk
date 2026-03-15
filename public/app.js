@@ -25,37 +25,6 @@ const L = {
   }
 }[LANG] || L.sv;
 
-// ========== Dark Mode ==========
-function toggleDark() {
-  document.documentElement.classList.toggle('dark');
-  localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
-}
-
-if (localStorage.getItem('darkMode') === 'true' ||
-    (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-  document.documentElement.classList.add('dark');
-}
-
-// ========== Language ==========
-async function toggleLang() {
-  const newLang = LANG === 'sv' ? 'en' : 'sv';
-  await fetch('/api/user/lang', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ lang: newLang })
-  });
-  location.reload();
-}
-
-// ========== Currency ==========
-async function setCurrency(currency) {
-  await fetch('/api/user/currency', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ currency })
-  });
-  location.reload();
-}
 
 // ========== Add Product ==========
 const addForm = document.getElementById('addForm');
