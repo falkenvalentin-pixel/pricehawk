@@ -3,7 +3,7 @@ const texts = {
     appName: 'Prisbevakning.com',
     tagline: 'Bevaka priser. Spara pengar.',
     heroTitle: 'Missa aldrig en prissänkning',
-    heroSub: 'Klistra in en produktlänk, så bevakar vi priset åt dig. Du får ett mejl direkt när priset ändras.',
+    heroSub: 'Klistra in en produktlänk, så bevakar vi priset åt dig. Du får ett mejl direkt när priset sänks.',
     ctaLogin: 'Kom igång med Google',
     ctaAdd: 'Lägg till bevakning',
     feature1Title: 'Automatisk prisbevakning',
