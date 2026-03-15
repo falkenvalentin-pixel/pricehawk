@@ -55,7 +55,7 @@ function extractFromHtml($, url) {
     } catch {}
   }
 
-  // --- Price: JSON-LD ---
+  // --- Price & Image: JSON-LD ---
   $('script[type="application/ld+json"]').each((_, el) => {
     if (result.price) return;
     try {
@@ -63,6 +63,12 @@ function extractFromHtml($, url) {
       if (data['@graph']) data = data['@graph'];
       const items = Array.isArray(data) ? data : [data];
       for (const item of items) {
+        // Extract image from JSON-LD
+        if (!result.image_url && item.image) {
+          const img = Array.isArray(item.image) ? item.image[0] : item.image;
+          if (typeof img === 'string' && img.startsWith('http')) result.image_url = img;
+          else if (img && img.url) result.image_url = img.url;
+        }
         const offers = item.offers || (item['@type'] === 'Offer' ? item : null);
         if (!offers) continue;
         const offerList = Array.isArray(offers) ? offers : [offers];
