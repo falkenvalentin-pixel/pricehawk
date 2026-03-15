@@ -7,7 +7,7 @@ const texts = {
     ctaLogin: 'Logga in med Google',
     ctaAdd: 'Lägg till bevakning',
     feature1Title: 'Automatisk prisbevakning',
-    feature1Desc: 'Vi kollar priset var 6:e timme och meddelar dig direkt vid ändringar.',
+    feature1Desc: 'Vi kollar priset en gång per dag och meddelar dig direkt vid ändringar.',
     feature2Title: 'Prishistorik',
     feature2Desc: 'Se hur priset har utvecklats över tid med tydliga grafer.',
     feature3Title: 'Målpris',
