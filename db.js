@@ -97,8 +97,9 @@ function all(sql, params = []) {
 
 function run(sql, params = []) {
   db.run(sql, params);
+  const lastId = db.exec("SELECT last_insert_rowid()")[0]?.values[0][0];
   save();
-  return { lastInsertRowid: db.exec("SELECT last_insert_rowid()")[0]?.values[0][0] };
+  return { lastInsertRowid: lastId };
 }
 
 const queries = {
