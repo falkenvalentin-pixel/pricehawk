@@ -246,7 +246,7 @@ async function scrapeProduct(url) {
       console.log(`[Scraper] Using ScraperAPI...`);
       const res = await axios.get('https://api.scraperapi.com', {
         params: { api_key: scraperApiKey, url: url },
-        timeout: 30000,
+        timeout: 45000,
       });
       const $ = cheerio.load(res.data);
       const result = extractFromHtml($, url);

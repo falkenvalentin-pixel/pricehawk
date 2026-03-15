@@ -112,7 +112,7 @@ if (addForm) {
 
 // ========== Poll for price after adding ==========
 async function pollForPrice(productId, card, timerInterval) {
-  const maxAttempts = 30; // 30 x 2s = 60s
+  const maxAttempts = 45; // 45 x 2s = 90s
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(r => setTimeout(r, 2000));
     try {
